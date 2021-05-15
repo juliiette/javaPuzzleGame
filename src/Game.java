@@ -1,6 +1,7 @@
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.image.BufferedImage;
 import java.awt.image.CropImageFilter;
@@ -8,36 +9,40 @@ import java.awt.image.FilteredImageSource;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Random;
 
 public class Game extends JFrame {
 
     private ArrayList<Point> solution;
     private ArrayList<PuzzleButton> buttons;
+
     private JPanel panel;
-    private BufferedImage sourceImage;
     private BufferedImage resizedImage;
     private int width, height;
-    private final int DESIRED_WIDTH = 1000;
     private Image cell;
     private PuzzleButton lastButton;
-    private static final Random RANDOM = new Random();
-    private boolean gameOver;
+
+    private final int DESIRED_WIDTH = 1000;
+    private final int NUMBER_OF_BUTTONS = 20;
+
 
     public Game(){
-        gameOver = true;
         initUI();
     }
 
     public void initUI(){
         solution = fillSolution(solution);
+
         buttons = new ArrayList<>();
         panel = new JPanel();
         panel.setBorder(BorderFactory.createLineBorder(Color.gray));
         panel.setLayout(new GridLayout(4, 5));
 
         try {
-            sourceImage = loadImage();
+            BufferedImage sourceImage = loadImage();
             int height = getNewHeight(sourceImage.getWidth(), sourceImage.getHeight());
 
             resizedImage = resizeImage(sourceImage, height);
@@ -70,21 +75,23 @@ public class Game extends JFrame {
             }
         }
 
-        newGame();
+        Collections.shuffle(buttons);
+        buttons.add(lastButton);
+
+        for (int i = 0; i < NUMBER_OF_BUTTONS; i++){
+            PuzzleButton btn = buttons.get(i);
+            panel.add(btn);
+            btn.setBorder(BorderFactory.createLineBorder(Color.gray));
+            btn.addActionListener(new ClickAction());
+        }
+
+        pack();
+        setTitle("Puzzle");
+        setResizable(false);
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
 
-    private void newGame(){
-        do {
-            // reset();
-            shuffle();
-        } while (!isSolvable());
-
-        gameOver = false;
-    }
-
-    private void shuffle(){
-
-    }
 
     private BufferedImage resizeImage(BufferedImage originImage, int height){
         BufferedImage resizedImage = new BufferedImage(1000, height, BufferedImage.TYPE_INT_ARGB);
@@ -134,6 +141,72 @@ public class Game extends JFrame {
         list.add(new Point(3,4));
 
         return list;
+    }
+
+    private class ClickAction extends AbstractAction {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+
+        }
+
+        private void checkButton(ActionEvent event){
+            int lidx  = 0;
+
+            for (PuzzleButton button : buttons) {
+                if (button.isLastButton()){
+                    lidx = buttons.indexOf(button);
+                }
+            }
+
+            JButton button = (JButton)event.getSource();
+            int bidx = buttons.indexOf(button);
+
+            if ((bidx - 1 == lidx) || (bidx + 1 == lidx) || (bidx - 3 == lidx) || (bidx + 3 == lidx)){
+                Collections.swap(buttons, bidx, lidx);
+                updateButtons();
+            }
+        }
+
+        private void updateButtons(){
+            panel.removeAll();
+
+            for (JComponent btn : buttons){
+                panel.add(btn);
+            }
+
+            panel.validate();
+        }
+    }
+
+    private void checkSolution(){
+        List<Point> current = new ArrayList<>();
+
+        for (JComponent btn : buttons){
+            current.add((Point) btn.getClientProperty("position"));
+        }
+
+        if (compareList(solution, current)) {
+            JOptionPane.showMessageDialog(panel, "Finished",
+                    "Congratulation", JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+
+    public static boolean compareList(List ls1, List ls2) {
+
+        return ls1.toString().contentEquals(ls2.toString());
+    }
+
+    public static void main(String[] args) {
+
+        EventQueue.invokeLater(new Runnable() {
+
+            @Override
+            public void run() {
+                Game puzzle = new Game();
+                puzzle.setVisible(true);
+            }
+        });
     }
 
 }
