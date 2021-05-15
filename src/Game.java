@@ -39,7 +39,7 @@ public class Game extends JFrame {
         buttons = new ArrayList<>();
         panel = new JPanel();
         panel.setBorder(BorderFactory.createLineBorder(Color.gray));
-        panel.setLayout(new GridLayout(4, 5));
+        panel.setLayout(new GridLayout(4, 5, 0, 0));
 
         try {
             BufferedImage sourceImage = loadImage();
@@ -147,7 +147,8 @@ public class Game extends JFrame {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-
+            checkButton(e);
+            checkSolution();
         }
 
         private void checkButton(ActionEvent event){
@@ -162,7 +163,7 @@ public class Game extends JFrame {
             JButton button = (JButton)event.getSource();
             int bidx = buttons.indexOf(button);
 
-            if ((bidx - 1 == lidx) || (bidx + 1 == lidx) || (bidx - 3 == lidx) || (bidx + 3 == lidx)){
+            if ((bidx - 1 == lidx) || (bidx + 1 == lidx) || (bidx - 5 == lidx) || (bidx + 5 == lidx)){
                 Collections.swap(buttons, bidx, lidx);
                 updateButtons();
             }
